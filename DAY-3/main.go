@@ -15,10 +15,11 @@ func exportData(input *os.File) ([][]string, error) {
 
 	scanner := bufio.NewScanner(input)
 	out := make([][]string, 0)
-	var validID = regexp.MustCompile(`mul\(\d+,\d+\)`)
+	// added two other patterns to siwtch on/off the mul statements
+	var validPatterns = regexp.MustCompile(`mul\(\d+,\d+\)|do\(\)|don't\(\)`) 
 	for scanner.Scan() {
 		line := scanner.Text()
-		strings := validID.FindAllString(line, -1)
+		strings := validPatterns.FindAllString(line, -1)
 		out = append(out, strings)
 	}
 
@@ -75,12 +76,23 @@ func execMul(str string) (int, error) {
 
 func processData(data []string) int {
 	sum := 0
+	valid := true
 	for _, op := range data {
-		result, err := execMul(op)
-		if err != nil {
-			fmt.Printf("Error processing %s: %v\n", op, err)
+		if op == "don't()" {
+			valid = false
+			continue
 		}
-		sum += result
+		if op == "do()"{
+			valid = true
+			continue
+		}
+		if valid {
+			result, err := execMul(op)
+			if err != nil {
+				fmt.Printf("Error processing %s: %v\n", op, err)
+			}
+			sum += result
+		}
 	}
 	return sum
 }
